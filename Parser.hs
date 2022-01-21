@@ -2,6 +2,7 @@ module Parser where
 import Control.Applicative (Alternative, empty, (<|>))
 import Token (Token (line, pos, tokenType), isNonTerminal, isTerminal, isLiteral, isColumn, isBar, isSemi, isStar, isQmark, isPlus, isLParen, isRParen, getValue)
 import ADT
+import Lexer (lexing)
 
 newtype Parser a = P ([Token] -> Either String (a, [Token]))
 
@@ -75,7 +76,7 @@ sepBy1 p sep = do x <- p
 type File = [Grammar]
 
 nonTerminalToken = satisfy "non-terminal token expected" (isNonTerminal . tokenType)
-terminalToken = satisfy "terminal token expected" (not . isTerminal . tokenType)
+terminalToken = satisfy "terminal token expected" (isTerminal . tokenType)
 literalToken = satisfy "literal token expected" (isLiteral . tokenType)
 
 column = satisfy "column expected" (isColumn . tokenType)
@@ -95,33 +96,38 @@ terminalRule = do t <- terminalToken
                   _ <- column
                   l <- literalToken
                   _ <- semi
-                  pure (getValue t, getValue l)
+                  pure (TerminalRule (getValue t) (getValue l))
 
 nonTerminalRule = do n <- nonTerminalToken
                      _ <- column
-                     xs <- sepBy1 term bar
+                     xs <- branches
                      _ <- semi
-                     pure (getValue n, xs)
+                     pure (NonTerminalRule (getValue n) xs)
 
-term = terminalTerm <|> nonTerminalTerm <|> branch <|> optional <|> manyTerms <|> many1Terms
+branches = sepBy1 termlist bar
 
-terminalTerm = do getValue <$> terminalToken
+termlist = many term
 
-nonTerminalTerm = do getValue <$> nonTerminalToken
+term :: Parser Term
+term = do f <- factor
+          s <- symbol
+          pure (f, s)
 
-branch = do _ <- lparen
-            xs <- sepBy term bar
-            _ <- rparen
-            pure (xs)
+factor =  do TerminalTerm . getValue <$> terminalToken
+      <|> do NonTerminalTerm . getValue <$> nonTerminalToken
+      <|> do LiteralTerm . getValue <$> literalToken
+      <|> do lparen
+             xs <- branches
+             rparen
+             pure (Group xs)
 
-optional = do x <- term
-              _ <- qmark
-              pure [x]
+symbol = do _ <- star
+            pure Star
+            <|> do _ <- qmark
+                   pure QMark
+                   <|> do _ <- plus
+                          pure Plus
+                          <|> pure None -- epsilon case
 
-manyTerm = do x <- term
-              _ <- star
-              pure [x]
-
-many1Term = do x <- term
-               _ <- plus
-               pure [x]
+parseTopLevel :: String -> File
+parseTopLevel = either (error . show) fst . parse topLevel . lexing
