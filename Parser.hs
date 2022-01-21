@@ -1,6 +1,7 @@
 module Parser where
 import Control.Applicative (Alternative, empty, (<|>))
-import Token (Token (line, pos))
+import Token (Token (line, pos, tokenType), isNonTerminal, isTerminal, isLiteral, isColumn, isBar, isSemi, isStar, isQmark, isPlus, isLParen, isRParen, getValue)
+import ADT
 
 newtype Parser a = P ([Token] -> Either String (a, [Token]))
 
@@ -37,10 +38,10 @@ item = P (\s -> case s of
 satisfy :: String -> (Token -> Bool) -> Parser Token
         -- Error message
 satisfy m f = do t <- item
-                 if f t then pure t else 
-                    let (r, p) = (line t, pos t) in 
+                 if f t then pure t else
+                    let (r, p) = (line t, pos t) in
                         P (\_ -> Left $ "Error around " ++ show r ++ ":" ++ show p ++ ", " ++ m ++ ".")
-                                        
+
 
 choice :: [Parser a] -> Parser a
 choice = foldr (<|>) empty
@@ -71,3 +72,56 @@ sepBy1 p sep = do x <- p
                                  p)
                   pure (x:xs) <|> pure [x]
 
+type File = [Grammar]
+
+nonTerminalToken = satisfy "non-terminal token expected" (isNonTerminal . tokenType)
+terminalToken = satisfy "terminal token expected" (not . isTerminal . tokenType)
+literalToken = satisfy "literal token expected" (isLiteral . tokenType)
+
+column = satisfy "column expected" (isColumn . tokenType)
+bar = satisfy "bar expected" (isBar . tokenType)
+star = satisfy "star expected" (isStar . tokenType)
+qmark = satisfy "question mark expected" (isQmark . tokenType)
+plus = satisfy "plus expected" (isPlus . tokenType)
+lparen = satisfy "left parenthesis expected" (isLParen . tokenType)
+rparen = satisfy "right parenthesis expected" (isRParen . tokenType)
+semi = satisfy "semicolon expected" (isSemi . tokenType)
+
+topLevel = some rule
+
+rule = terminalRule <|> nonTerminalRule
+
+terminalRule = do t <- terminalToken
+                  _ <- column
+                  l <- literalToken
+                  _ <- semi
+                  pure (getValue t, getValue l)
+
+nonTerminalRule = do n <- nonTerminalToken
+                     _ <- column
+                     xs <- sepBy1 term bar
+                     _ <- semi
+                     pure (getValue n, xs)
+
+term = terminalTerm <|> nonTerminalTerm <|> branch <|> optional <|> manyTerms <|> many1Terms
+
+terminalTerm = do getValue <$> terminalToken
+
+nonTerminalTerm = do getValue <$> nonTerminalToken
+
+branch = do _ <- lparen
+            xs <- sepBy term bar
+            _ <- rparen
+            pure (xs)
+
+optional = do x <- term
+              _ <- qmark
+              pure [x]
+
+manyTerm = do x <- term
+              _ <- star
+              pure [x]
+
+many1Term = do x <- term
+               _ <- plus
+               pure [x]
