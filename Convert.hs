@@ -4,7 +4,7 @@ import Data.List (find)
 import Data.Maybe (fromJust)
 
 convertGrammar :: Grammar -> Grammar
-convertGrammar = foldr (\x acc -> let (r, gg) = convertRule x acc in
+convertGrammar = foldl (\acc x -> let (r, gg) = convertRule x acc in
                       gg ++ [r]) []
 
 convertRule :: Rule -> Grammar -> (Rule, Grammar)
@@ -15,21 +15,21 @@ convertRule (NonTerminalRule n br) g =
 
 convertBranches :: [[Term]] -> String -> Grammar -> ([[Term]], Grammar)
 convertBranches ts n g =
-    foldr (\t (ac1, ac2) -> let (rt, rg) = reduceOnTermList t n ac2 in
+    foldl (\(ac1, ac2) t -> let (rt, rg) = reduceOnTermList t n ac2 in
                     (ac1 ++ [rt], ac2 ++ rg)) ([], g) ts
 
 reduceOnTermList :: [Term] -> String -> Grammar -> ([Term], Grammar)
 reduceOnTermList ts n g =
     let z = zip ts [1..] in
-        let zz = map (\((f, i), y) -> convertFactor f (n ++ "#" ++ show i) g) z in
-            let ff = map (\x -> (fst $ x, None)) zz in
+        let zz = map (\((f, _), y) -> convertFactor f (n ++ "#" ++ show y) g) z in
+            let ff = map (\x -> (fst x, None)) zz in
                 let gg = concatMap snd zz in
                     (ff, gg)
 
 convertTermList :: [Term] -> String -> Grammar -> Grammar
 convertTermList t n g =
     let (ts, g1) = reduceOnTermList t n g in
-    concatMap fst (foldr (\x acc -> acc ++ [convertTerm x n g1]) [] t)
+    concatMap fst (foldl (\acc x -> acc ++ [convertTerm x n g1]) [] t)
 
 convertFactor :: Factor -> String -> Grammar -> (Factor, Grammar)
 convertFactor t@(TerminalTerm _) _ _ = (t, [])
