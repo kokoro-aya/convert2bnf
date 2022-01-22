@@ -38,3 +38,11 @@ data Symbol = None | QMark | Star | Plus deriving (Show, Eq)
 
 -- A BNF grammar is constituted only with terminal and non terminal terms and is not allowed to contain list of terms in a branch.
 -- Symbols are not allowed on BNF grammar.
+
+containsLiteral :: String -> Rule -> Bool
+containsLiteral s (TerminalRule _ t) = s == t
+containsLiteral _ _ = False
+
+ruleName :: Rule -> String
+ruleName (TerminalRule n _) = n
+ruleName (NonTerminalRule n _) = n

@@ -1,9 +1,48 @@
 module Convert where
 import ADT
+import Data.List (find)
+import Data.Maybe (fromJust)
 
--- convertGrammar :: Grammar -> Grammar -> Grammar
+convertGrammar :: Grammar -> Grammar
+convertGrammar = foldr (\x acc -> let (r, gg) = convertRule x acc in
+                      gg ++ [r]) []
 
--- convertFactor :: Factor -> Grammar -> Grammar
+convertRule :: Rule -> Grammar -> (Rule, Grammar)
+convertRule r@(TerminalRule _ _) g = (r, g)
+convertRule (NonTerminalRule n br) g =
+        let (br', g') = convertBranches br n g in
+            (NonTerminalRule n br', g')
+
+convertBranches :: [[Term]] -> String -> Grammar -> ([[Term]], Grammar)
+convertBranches ts n g =
+    foldr (\t (ac1, ac2) -> let (rt, rg) = reduceOnTermList t n ac2 in
+                    (ac1 ++ [rt], ac2 ++ rg)) ([], g) ts
+
+reduceOnTermList :: [Term] -> String -> Grammar -> ([Term], Grammar)
+reduceOnTermList ts n g =
+    let z = zip ts [1..] in
+        let zz = map (\((f, i), y) -> convertFactor f (n ++ "#" ++ show i) g) z in
+            let ff = map (\x -> (fst $ x, None)) zz in
+                let gg = concatMap snd zz in
+                    (ff, gg)
+
+convertTermList :: [Term] -> String -> Grammar -> Grammar
+convertTermList t n g =
+    let (ts, g1) = reduceOnTermList t n g in
+    concatMap fst (foldr (\x acc -> acc ++ [convertTerm x n g1]) [] t)
+
+convertFactor :: Factor -> String -> Grammar -> (Factor, Grammar)
+convertFactor t@(TerminalTerm _) _ _ = (t, [])
+convertFactor n@(NonTerminalTerm _) _ _ = (n, [])
+convertFactor lt@(LiteralTerm l) n g =
+    if any (containsLiteral l) g
+        then (NonTerminalTerm (fromJust $ ruleName <$> find (containsLiteral l) g), [])
+        else (NonTerminalTerm n, [TerminalRule n l])
+convertFactor (Group xs) n g =
+        let n' = n ++ "_g" in
+        let (tt, ng) = convertBranches xs n g in
+            (NonTerminalTerm n', ng ++ [NonTerminalRule n' tt])
+convertFactor Epsilon _ _ = (Epsilon, [])
 
 convertTerm :: Term -> String -> Grammar -> (Grammar, String)
 convertTerm (f, s) n g = case s of
