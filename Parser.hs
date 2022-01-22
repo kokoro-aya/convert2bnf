@@ -73,8 +73,6 @@ sepBy1 p sep = do x <- p
                                  p)
                   pure (x:xs) <|> pure [x]
 
-type File = [Grammar]
-
 nonTerminalToken = satisfy "non-terminal token expected" (isNonTerminal . tokenType)
 terminalToken = satisfy "terminal token expected" (isTerminal . tokenType)
 literalToken = satisfy "literal token expected" (isLiteral . tokenType)
@@ -129,5 +127,5 @@ symbol = do _ <- star
                           pure Plus
                           <|> pure None -- epsilon case
 
-parseTopLevel :: String -> File
+parseTopLevel :: String -> Grammar 
 parseTopLevel = either (error . show) fst . parse topLevel . lexing

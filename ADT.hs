@@ -1,7 +1,9 @@
 module ADT where
 
 -- A typical antlr grammar contains repetition and branch as well as groups
-data Grammar = TerminalRule String String 
+
+type Grammar = [Rule]
+data Rule = TerminalRule String String 
              | NonTerminalRule String Branches
              deriving (Show, Eq)
 
@@ -21,12 +23,13 @@ data Grammar = TerminalRule String String
 -}
 -- The data structure was therefore modified to lift the symbol out of factor/term and loop on term/group.
 
-type Branches =  [[Term]]
+type Branches =  [[Term]] -- the outer list stand for different branches of the rule/derivation and the inner list stand for a sequence of terms in this branch
 
 data Factor = TerminalTerm String
           | NonTerminalTerm String
           | LiteralTerm String
           | Group Branches
+          | Epsilon
           deriving (Show, Eq)
 
 type Term = (Factor, Symbol)
@@ -34,3 +37,4 @@ type Term = (Factor, Symbol)
 data Symbol = None | QMark | Star | Plus deriving (Show, Eq)
 
 -- A BNF grammar is constituted only with terminal and non terminal terms and is not allowed to contain list of terms in a branch.
+-- Symbols are not allowed on BNF grammar.
