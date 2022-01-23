@@ -10,10 +10,10 @@ main = do
     putStrLn "------------------------"
     putStrLn "    Original grammar"
     putStrLn "------------------------"
-    putStrLn . display $ g
+    putStrLn . display False $ g
 
     let g2 = convertGrammar g
     putStrLn "------------------------"
     putStrLn "     Output grammar"
     putStrLn "------------------------"
-    putStrLn . display $ g2
+    putStrLn . display True $ g2
