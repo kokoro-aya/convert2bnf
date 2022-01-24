@@ -46,3 +46,7 @@ containsLiteral _ _ = False
 ruleName :: Rule -> String
 ruleName (TerminalRule n _) = n
 ruleName (NonTerminalRule n _) = n
+
+isTerminalRule :: Rule -> Bool
+isTerminalRule (TerminalRule _ _) = True
+isTerminalRule _ = False

@@ -11,7 +11,7 @@ displaySymbol Star = "*"
 displaySymbol Plus = "+"
 
 displayFactor :: Bool -> Factor -> String
-displayFactor u (TerminalTerm s) = if u then toLowercase s else s
+displayFactor u (TerminalTerm s) = if u then map toLower s else s
 displayFactor u (NonTerminalTerm s) = if u then toUppercase s else s
 displayFactor _ (LiteralTerm s) = "'" ++ s ++ "'"
 displayFactor u (Group br) = "(" ++ displayBranches u br ++ ")"
@@ -24,20 +24,18 @@ displayTerm :: Bool -> Term -> String
 displayTerm u (f, s) = displayFactor u f ++ displaySymbol s
 
 displayRule :: Bool -> Rule -> String
-displayRule u (TerminalRule n t) = 
-    let n' = if u then toLowercase n else n in
+displayRule u (TerminalRule n t) =
+    let n' = if u then map toLower n else n in
         n' ++ " -> '" ++ t ++ "'."
-displayRule u (NonTerminalRule n bt) = 
+displayRule u (NonTerminalRule n bt) =
     let n' = if u then toUppercase n else n in
         n' ++ " -> " ++ displayBranches u bt ++ "."
 
 display :: Bool -> Grammar -> String
-display u = intercalate "\n" . map (displayRule u)
+display u g = intercalate "\n" . map (displayRule u) $ x
+    where x = r ++ t
+          (r, t) = (filter isTerminalRule g, filter (not . isTerminalRule) g)
 
 toUppercase :: String -> String
 toUppercase "" = ""
 toUppercase (x:xs) = toUpper x: xs
-
-toLowercase :: String -> String
-toLowercase "" = ""
-toLowercase (x:xs) = toLower x: xs

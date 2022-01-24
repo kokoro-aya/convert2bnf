@@ -38,7 +38,7 @@ reduceOnTermList ts n g =
 convertTermList :: [Term] -> String -> Grammar -> Grammar
 convertTermList t n g =
     let (ts, g1) = reduceOnTermList t n g in
-    concatMap fst (foldl (\acc x -> acc ++ [convertTerm x n g1]) [] t)
+    concatMap fst (foldl (\acc x -> acc ++ [convertTerm x n g1]) [] ts)
 
 convertFactor :: Factor -> String -> Grammar -> (Factor, Grammar)
 convertFactor t@(TerminalTerm _) _ _ = (t, [])
