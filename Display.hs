@@ -1,7 +1,7 @@
 module Display where
 
 import ADT
-import Data.List (intercalate)
+import Data.List (intercalate, nub)
 import Data.Char (toUpper, toLower)
 
 displaySymbol :: Symbol -> String
@@ -34,7 +34,8 @@ displayRule u (NonTerminalRule n bt) =
 display :: Bool -> Grammar -> String
 display u g = intercalate "\n" . map (displayRule u) $ x
     where x = r ++ t
-          (r, t) = (filter isTerminalRule g, filter (not . isTerminalRule) g)
+          (r, t) = (filter isTerminalRule gg, filter (not . isTerminalRule) gg)
+          gg = nub g
 
 toUppercase :: String -> String
 toUppercase "" = ""

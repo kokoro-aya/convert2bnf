@@ -1,5 +1,5 @@
 module Lexer where
-import Data.Char (isUpper, isLower, isAlpha, isSpace)
+import Data.Char (isUpper, isLower, isAlpha, isDigit, isSpace)
 import Token (Token (Token), TokenType (COLUMN, QMARK, STAR, BAR, PLUS, SEMI, Terminal, NonTerminal, Literal, LPAREN, RPAREN))
 import Text.Read.Lex (isSymbolChar)
 import Data.List (isPrefixOf)
@@ -14,7 +14,7 @@ isNonTerminalHead :: Char -> Bool
 isNonTerminalHead = isLower
 
 isNonTerminalChar :: Char -> Bool
-isNonTerminalChar c = isAlpha c || c == '_'
+isNonTerminalChar c = isAlpha c || isDigit c || c == '_'
 
 split :: Char -> String -> [String]
 split c xs = case break (==c) xs of 
