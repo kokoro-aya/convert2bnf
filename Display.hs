@@ -25,7 +25,7 @@ displayTerm u (f, s) = displayFactor u f ++ displaySymbol s
 
 displayRule :: Bool -> Rule -> String
 displayRule u (TerminalRule n t) =
-    let n' = if u then map toLower n else n in
+    let n' = if u then toLowercase n else n in
         n' ++ " -> '" ++ t ++ "'."
 displayRule u (NonTerminalRule n bt) =
     let n' = if u then toUppercase n else n in
@@ -40,3 +40,7 @@ display u g = intercalate "\n" . map (displayRule u) $ x
 toUppercase :: String -> String
 toUppercase "" = ""
 toUppercase (x:xs) = toUpper x: xs
+
+toLowercase :: String -> String
+toLowercase "" = ""
+toLowercase (x:xs) = toLower x: xs

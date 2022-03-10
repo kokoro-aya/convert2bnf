@@ -2,7 +2,6 @@ module Convert where
 import ADT
 import Data.List (find)
 import Data.Maybe (fromJust)
-import Data.Char (toUpper, toLower)
 
 convertGrammar :: Grammar -> Grammar
 convertGrammar = foldl (\acc x -> let (r, gg) = convertRule x acc in
@@ -48,7 +47,7 @@ convertFactor lt@(LiteralTerm l) n g =
         then (NonTerminalTerm (fromJust $ ruleName <$> find (containsLiteral l) g), [])
         else (NonTerminalTerm n, [TerminalRule n l])
 convertFactor (Group xs) n g =
-        let n' = n ++ "_g" in
+        let n' = n ++ "_Group" in
         let (tt, ng) = convertBranches xs n g in
             (NonTerminalTerm n', ng ++ [NonTerminalRule n' tt])
 convertFactor Epsilon _ _ = (Epsilon, [])
@@ -58,14 +57,14 @@ convertTerm (f, s) n g = case s of
     -- do nothing
     None -> ([], Nothing)
     -- S = A B* C -> S = A X C, X = ε | B X., X is returned
-    Star -> let n' = n ++ "_st" in
+    Star -> let n' = n ++ "_Star" in
         ([NonTerminalRule n' [[(Epsilon, None)], [(f, None), (NonTerminalTerm n', None)]]], Just n')
     -- S = A B? C -> S = A X C, X = ε | B., X is returned
-    QMark -> let n' = n ++ "_op" in
+    QMark -> let n' = n ++ "_Option" in
         ([NonTerminalRule n' [[(Epsilon, None)], [(f, None)]]], Just n')
     -- S = A B+ -> S = A X, X = B FB, FB = X | ε., X is returned
-    Plus -> let n1 = n ++ "_pl1" in
-            let n2 = n ++ "_pl2" in
+    Plus -> let n1 = n ++ "_Plus1" in
+            let n2 = n ++ "_Plus2" in
             ([
                 NonTerminalRule n1 [[(f, None), (NonTerminalTerm n2, None)]],
                 NonTerminalRule n2 [[(NonTerminalTerm n1, None)], [(Epsilon, None)]]

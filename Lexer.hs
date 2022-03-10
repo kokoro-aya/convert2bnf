@@ -51,11 +51,13 @@ tokenize ('/' : '/' : xs) r p = tokenize rem r 1
         (_, rem) = parseComment xs
 
 tokenize (':' : xs) r p = Token COLUMN r p : tokenize xs r (p + 1)
+tokenize ('-' : '>' : xs) r p = Token COLUMN r p : tokenize xs r (p + 1)
 tokenize ('|' : xs) r p = Token BAR    r p : tokenize xs r (p + 1)
 tokenize ('*' : xs) r p = Token STAR   r p : tokenize xs r (p + 1)
 tokenize ('?' : xs) r p = Token QMARK  r p : tokenize xs r (p + 1)
 tokenize ('+' : xs) r p = Token PLUS   r p : tokenize xs r (p + 1)
 tokenize (';' : xs) r p = Token SEMI   r p : tokenize xs r (p + 1)
+tokenize ('.' : xs) r p = Token SEMI   r p : tokenize xs r (p + 1)
 tokenize ('(' : xs) r p = Token LPAREN r p : tokenize xs r (p + 1)
 tokenize (')' : xs) r p = Token RPAREN r p : tokenize xs r (p + 1)
 
